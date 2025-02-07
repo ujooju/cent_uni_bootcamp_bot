@@ -30,7 +30,7 @@ async def get_user_chats(target_user_id: int, bot: Bot) -> list[dict]:
 
 async def is_bot_admin(chat_id: int, bot: Bot) -> bool:
     try:
-        bot_member = await bot.get_chat_member(chat_id, bot.id)
+        bot_member = await bot.get_chat_member(chat_id, (await bot.get_me()).id)
         return bot_member.status in ["administrator", "creator"]
     except Exception as e:
         logger.warning(f"Ошибка проверки прав бота в чате {chat_id}: {str(e)}.")
@@ -56,3 +56,4 @@ async def get_chat_info(chat_id: int, bot: Bot) -> dict:
     except Exception as e:
         logger.error(f"Ошибка получения информации о чате {chat_id}: {str(e)}")
         return {"chat_id": chat_id, "error": str(e)}
+    

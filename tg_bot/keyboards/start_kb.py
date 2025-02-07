@@ -10,11 +10,35 @@ def choose_chats(chats):
     for chat in chats:
         markup.add(
             InlineKeyboardButton(
-                text=chat["title"], callback_data="CHAT_ID_" + str(chat["chat_id"])
+                text=f'💬 {chat["title"]}', callback_data="CHAT_ID_" + str(chat["chat_id"])
             )
         )
+    markup.row(
+        InlineKeyboardButton(
+            text="❓ Нужна помощь?",
+            callback_data="HELP_ADDING_TO_CHAT"
+        )
+    )
     return markup
 
+def check_again_keyboard():
+    markup = InlineKeyboardMarkup()
+    markup.row(
+        InlineKeyboardButton(
+            text="✅ Сделал! Проверить!",
+            callback_data="CHECK_BOT"
+        )
+    )
+    return markup
+def get_help_markup():
+    markup = InlineKeyboardMarkup()
+    markup.row(
+        InlineKeyboardButton(
+            text="❓ Нужна помощь?",
+            callback_data="HELP_ADDING_TO_CHAT"
+        )
+    )
+    return markup
 
 def choose_period():
     markup = InlineKeyboardMarkup()

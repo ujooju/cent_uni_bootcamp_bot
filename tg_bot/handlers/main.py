@@ -1,9 +1,10 @@
 from aiogram import Dispatcher, Bot, types
+from tg_bot import keyboards
 from tg_bot.models import Chat, sessionmaker, engine, save_message_to_db
 from tg_bot.models import create_chat
 import asyncio
 from tg_bot.services import get_user_chats, process_chat_summary
-from tg_bot.keyboards import choose_chats, choose_period, choose_category
+from tg_bot.keyboards import choose_chats, choose_period, choose_category, check_again_keyboard
 from datetime import datetime, timedelta
 from aiogram.utils.exceptions import MessageToDeleteNotFound, TelegramAPIError
 import pytz
@@ -15,19 +16,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
-
-
-
-
-async def get_messages(chat_id, start_date, bot: Bot):
-    messages = []
-    async for message in bot.get_chat_history(chat_id, limit=1000):
-        if message.date >= start_date:
-            messages.append(message.text)
-        else:
-            break
-    return messages
 
 
 async def chat_chosen_handler(callback_query: types.CallbackQuery, state: FSMContext):
@@ -99,6 +87,20 @@ async def period_chosen_handler(callback_query: types.CallbackQuery, state: FSMC
     )
     await state.finish()
 
+async def help_adding_handler(callback: types.CallbackQuery):
+    
+    help_text = (
+        "🛠 <b>Как добавить бота в чат:</b>\n\n"
+        "1. Откройте настройки чата\n"
+        "2. Выберите 'Добавить участника'\n"
+        "3. Найдите @username_бота\n"
+        "4. Назначьте права администратора\n"
+        "5. Сохраните изменения\n\n"
+        "✅ После этих действий бот появится в списке!"
+    )
+    keyboard = check_again_keyboard()
+    await callback.message.answer(help_text, reply_markup=keyboard)
+    await callback.message.delete()
 
 def register_main_handlers(dp: Dispatcher):
 
@@ -117,3 +119,5 @@ def register_main_handlers(dp: Dispatcher):
         lambda c: c.data.startswith("period_"),
         state=SummaryState.choosing_period,
     )
+    dp.register_callback_query_handler(help_adding_handler, text="HELP_ADDING_TO_CHAT")
+    dp.register_callback_query_handler(help_adding_handler, text="HELP_ADDING_TO_CHAT", state="*")

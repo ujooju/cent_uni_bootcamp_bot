@@ -1,9 +1,11 @@
+from pydoc import text
+import stat
 from aiogram import types, Dispatcher
 from tg_bot.models import save_message_to_db
 from tg_bot.models import create_chat
 import asyncio
 from tg_bot.services import get_user_chats
-from tg_bot.keyboards import choose_chats
+from tg_bot.keyboards import choose_chats, get_help_markup
 from datetime import datetime, timedelta
 from aiogram.utils.exceptions import MessageToDeleteNotFound, TelegramAPIError
 from typing import Optional
@@ -118,23 +120,53 @@ async def handle_error(message: types.Message) -> None:
         logger.error(f"Не удалось отправить сообщение об ошибке: {str(e)}")
 
 
-async def start_handler(message: types.Message):
+async def start_handler(message: types.Message, user_id: int = None):
+    welcome_text = (
+        "👋 *Привет, {user_name}!*\n\n"
+        "Я твой цифровой помощник для работы с чатами! Вот что я умею:\n\n"
+        "📝 *Делать краткие выжимки* из обсуждений за любой период\n"
+        "⏰ *Напоминать о дедлайнах* и важных событиях\n"
+        "📅 *Планировать активности* на ближайший месяц\n"
+        "🤝 *Рекомендовать волонтерские мероприятия*\n\n"
+        "Чтобы начать работу, выбери чат из списка ниже:"
+    ).format(user_name=message.from_user.full_name)
+
+    no_chats_text = (
+        "😢 *Упс! Кажется, вы еще не добавили меня ни в один чат.*\n\n"
+        "Чтобы я смог работать, сделайте несколько простых шагов:\n\n"
+        "1. 👉 Добавьте меня в группу/канал\n"
+        "2. 👑 Назначьте администратором с правом просмотра сообщений\n"
+        "3. 💬 Напишите любое сообщение в чате\n\n"
+        "После этого я смогу анализировать переписки и помогать вам!"
+    )
+
     if message.chat.id < 0:
         return
-    chats = await get_user_chats(target_user_id=message.from_user.id, bot=message.bot)
-    print(chats, " - CHATS")
-    if chats != []:
-        keyboard = choose_chats(chats)
-        await message.answer("Выберите чат:", reply_markup=keyboard)
+    if not user_id:
+        chats = await get_user_chats(target_user_id=message.from_user.id, bot=message.bot)
     else:
-        await message.answer(
-            "Вы не добавили меня ни в один чат. 😕\n\nИли я не могу читать сообщения  😕 Назначьте меня пожалуйтста админом группы! Тогда я смогу читать все сообщения и делать краткую выжимку)"
-        )
-        
+         chats = await get_user_chats(target_user_id=user_id, bot=message.bot)
+    if chats:
+
+        keyboard = choose_chats(chats)
+        await message.answer(welcome_text, parse_mode="Markdown", reply_markup=keyboard)
+        await message.delete()
+    else:
+        keyboard = get_help_markup()
+        await message.answer(no_chats_text, parse_mode="Markdown", reply_markup=keyboard)
+        await message.delete()
+    
     await SummaryState.choosing_chat.set()
+
+async def start_query_handler(callback: types.CallbackQuery):
+    return await start_handler(callback.message, callback.from_user.id)
 
 def register_start_handlers(dp: Dispatcher):
     dp.register_message_handler(start_handler, commands=["start"])
+    dp.register_message_handler(start_handler, commands=["start"], state="*")
+    dp.register_callback_query_handler(start_query_handler, text="CHECK_BOT")
+    dp.register_callback_query_handler(start_query_handler, text="CHECK_BOT", state="*")
     dp.register_message_handler(save_message_handler, content_types=types.ContentType.TEXT)
     dp.register_message_handler(add_handler, content_types=["new_chat_members"])
+    
     
