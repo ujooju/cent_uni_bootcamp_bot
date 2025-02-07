@@ -1,84 +1,23 @@
-from email import message, message_from_binary_file
-from hmac import new
-from re import S
 from aiogram import Dispatcher, Bot, types
 from tg_bot.models import Chat, sessionmaker, engine, save_message_to_db
+from tg_bot.models import create_chat
+import asyncio
 from tg_bot.services import get_user_chats, process_chat_summary
 from tg_bot.keyboards import choose_chats, choose_period, choose_category
 from datetime import datetime, timedelta
+from aiogram.utils.exceptions import MessageToDeleteNotFound, TelegramAPIError
 import pytz
+from typing import Optional
 from tg_bot.states import SummaryState
 from aiogram.dispatcher import FSMContext
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-async def add_handler(message: types.Message):
-    bot_obj = await message.bot.get_me()
-    bot_id = bot_obj.id
-
-    for chat_member in message.new_chat_members:
-        if chat_member.id == bot_id:
-            chat_id = message.chat.id
-            Session = sessionmaker()
-            session = Session(bind=engine)
-            chat = session.query(Chat).filter(Chat.id == chat_id).all()
-            if chat == []:
-                try:
-                    new_chat = Chat(chat_id=chat_id)
-                    try:
-                        await message.delete()
-                    except:
-                        pass
-                    await message.answer(
-                        "Приветствую вас! 😊 Спасибо, что добавили меня в этот канал! Я очень рад быть здесь!\n\nЧто я могу для вас сделать? 🤔\n\nСоставить краткий и структурированный пересказ данных за любой период.\nНапомнить о ближайших дедлайнах ⏰.\nПодсказать, чем можно заняться в течение следующего месяца 📅.\nРассказать о волонтерских движениях и мероприятиях, которые стоит учесть 🤝.\nЕсли вам нужно что-то из этого — просто обратитесь! 😊"
-                    )
-                    session.add(new_chat)
-                    session.commit()
-                except Exception as e:
-                    print(e)
-            session.close()
 
 
-async def start_handler(message: types.Message):
-    if message.chat.id < 0:
-        return
-    chats = await get_user_chats(target_user_id=message.from_user.id, bot=message.bot)
-    print(chats, " - CHATS")
-    if chats != []:
-        keyboard = choose_chats(chats)
-        await message.answer("Выберите чат:", reply_markup=keyboard)
-    else:
-        await message.answer(
-            "Вы не добавили меня ни в один чат. 😕\n\nИли я не могу читать сообщения  😕 Назначьте меня пожалуйтста админом группы! Тогда я смогу читать все сообщения и делать краткую выжимку)"
-        )
-        
-    await SummaryState.choosing_chat.set()
 
-
-# Обработчик для сохранения сообщений в базу данных
-async def save_message_handler(message: types.Message):
-    if message.chat.id < 0:
-        try:
-            print(message.as_json())
-            save_message_to_db(message.chat.id, message.from_user.id, message.text, f"https://t.me/{message.chat.username}/{message.message_id}")
-            print("SAVE MESSAGE", message.chat.id, message.from_user.id, message.text, f"https://t.me/{message.chat.username}/{message.message_id}")
-        except:
-            print(message.as_json())
-            save_message_to_db(message.chat.id, message.from_user.id, message.text)
-            print("SAVE MESSAGE", message.chat.id, message.from_user.id, message.text)
-        return
-    chats = await get_user_chats(target_user_id=message.from_user.id, bot=message.bot)
-    print(chats, " - CHATS")
-    if chats != []:
-        keyboard = choose_chats(chats)
-        await message.answer("Выберите чат:", reply_markup=keyboard)
-    else:
-
-        await message.answer("У вас не хватает прав доступа :( , ничё поделать не могу)")
-        # await message.answer(
-        #     "Вы не добавили меня ни в один чат, или я не могу читать сообщения😕\nНазначьте меня пожалуйтста админом группы! Тогда я смогу читать все сообщения и делать краткую выжимку)"
-        # )
-        
-    # await SummaryState.choosing_chat.set()
 
 
 async def get_messages(chat_id, start_date, bot: Bot):
@@ -162,11 +101,7 @@ async def period_chosen_handler(callback_query: types.CallbackQuery, state: FSMC
 
 
 def register_main_handlers(dp: Dispatcher):
-    dp.register_message_handler(
-        save_message_handler, content_types=types.ContentType.TEXT
-    )
-    dp.register_message_handler(add_handler, content_types=["new_chat_members"])
-    dp.register_message_handler(start_handler, commands=["start"])
+
     dp.register_callback_query_handler(
         chat_chosen_handler,
         lambda c: c.data.startswith("CHAT_ID_"),

@@ -4,28 +4,25 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from httpx import get
-from tg_bot.config import load_config
+from tg_bot.config import load_config, setup_logger
 
-from tg_bot.handlers import register_main_handlers
+from tg_bot.handlers import register_main_handlers, register_start_handlers
 from dotenv import load_dotenv
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 
-def register_all_filters(dp):
-    return None
 
+logger = setup_logger()
 
 def register_all_handlers(dp):
+    logger.debug("Registering handlers...")
     register_main_handlers(dp)
+    register_start_handlers(dp)
 
 
 async def main():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s",
-    )
     config = load_config(".env")
 
     bot = Bot(token=config.tg_bot.token, parse_mode="HTML")
@@ -33,13 +30,14 @@ async def main():
     dp = Dispatcher(bot, storage=storage)
     bot["config"] = config
 
-    register_all_filters(dp)
     register_all_handlers(dp)
 
     try:
+        logger.info("Starting bot...")
         await dp.start_polling()
+        
     finally:
-        await dp.storager.close()
+        await dp.storage.close()
         await dp.storage.wait_closed()
         await bot.session.close()
 

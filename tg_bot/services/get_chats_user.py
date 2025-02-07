@@ -12,13 +12,12 @@ async def get_user_chats(target_user_id: int, bot: Bot) -> list:
     session = Session(bind=engine)
     unique_chat_ids = session.query(Chat).all()
     session.close()
-
+    print(unique_chat_ids)
     for chat_id in unique_chat_ids:
         try:
             member = await bot.get_chat_member(
                 chat_id=chat_id.chat_id, user_id=target_user_id
             )
-
             if member.status not in ["left", "kicked"]:
                 chat = await bot.get_chat(chat_id.chat_id)
                 chats_with_user.append(
