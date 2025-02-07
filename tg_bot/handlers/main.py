@@ -104,7 +104,7 @@ async def period_chosen_handler(callback_query: types.CallbackQuery, state: FSMC
         "period_week": timedelta(days=7),
         "period_month": timedelta(days=30),
     }
-
+    category = user_data.get("category")
     if period_key not in periods:
         await callback_query.answer(
             "<b>⚠️ Ой! Что-то не так.</b> Пожалуйста, выберите корректный период. ❌"
@@ -128,7 +128,7 @@ async def period_chosen_handler(callback_query: types.CallbackQuery, state: FSMC
         type2_text = "Нетворкинг"
     user_data = await state.get_data()
     chat_id = user_data.get("chat_id")
-    category = user_data.get("category")
+
     start_date = datetime.now(pytz.UTC) - periods[period_key]
     await callback_query.message.delete()
     await callback_query.message.answer(
