@@ -1,4 +1,4 @@
-from email import message
+from email import message, message_from_binary_file
 from hmac import new
 from re import S
 from aiogram import Dispatcher, Bot, types
@@ -42,22 +42,34 @@ async def start_handler(message: types.Message):
     if message.chat.id < 0:
         return
     chats = await get_user_chats(target_user_id=message.from_user.id, bot=message.bot)
-    print(chats)
-    keyboard = choose_chats(chats)
-    await message.answer("Выберите чат:", reply_markup=keyboard)
+    print(chats, " - CHATS")
+    if chats != []:
+        keyboard = choose_chats(chats)
+        await message.answer("Выберите чат:", reply_markup=keyboard)
+    else:
+        await message.answer(
+            "Вы не добавили меня ни в один чат. 😕\n\nИли я не могу читать сообщения  😕 Назначьте меня пожалуйтста админом группы! Тогда я смогу читать все сообщения и делать краткую выжимку)"
+        )
+        
     await SummaryState.choosing_chat.set()
 
 
 # Обработчик для сохранения сообщений в базу данных
 async def save_message_handler(message: types.Message):
     if message.chat.id < 0:
-        save_message_to_db(message.chat.id, message.from_user.id, message.text)
+        save_message_to_db(message.chat.id, message.from_user.id, message.text, message.link)
         print("SAVE MESSAGE", message.chat.id, message.from_user.id, message.text)
         return
     chats = await get_user_chats(target_user_id=message.from_user.id, bot=message.bot)
-    print(chats)
-    keyboard = choose_chats(chats)
-    await message.answer("Выберите чат:", reply_markup=keyboard)
+    print(chats, " - CHATS")
+    if chats != []:
+        keyboard = choose_chats(chats)
+        await message.answer("Выберите чат:", reply_markup=keyboard)
+    else:
+        await message.answer(
+            "Вы не добавили меня ни в один чат, или я не могу читать сообщения😕\nНазначьте меня пожалуйтста админом группы! Тогда я смогу читать все сообщения и делать краткую выжимку)"
+        )
+        
     await SummaryState.choosing_chat.set()
 
 
@@ -136,7 +148,7 @@ async def period_chosen_handler(callback_query: types.CallbackQuery, state: FSMC
         f"🔍 Чат: {chat_id}\n📂 Категория: {type2_text}\n📅 Период: {type_text}\n\nСкоро всё будет готово!"
     )
     result = await process_chat_summary(
-        chat_id, callback_query.from_user.id, category, period_key, callback_query.bot
+        chat_id, callback_query.from_user.id, period_key, type, callback_query.bot
     )
     await state.finish()
 

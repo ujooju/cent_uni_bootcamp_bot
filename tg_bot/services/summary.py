@@ -16,6 +16,7 @@ import os
 TOKEN = os.getenv("TOKEN")
 YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID")
 YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
+
 sdk = YCloudML(folder_id=YANDEX_FOLDER_ID, auth=YANDEX_API_KEY)
 
 
@@ -48,7 +49,7 @@ async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str) -> st
     api_key = YANDEX_API_KEY
     gpt_model = "yandexgpt-lite"
 
-    system_prompt = f"ТЫ ВЫПОЛНЯЕШЬ ЗАДАЧУ ПОМОЩНИКА, КОТОРЫЙ ЗАНИМАЕТСЯ РАСПРЕДЕЛЕНИЕМ ЗАДАЧ. СЕЙЧАС Я ОТПРАВЛЮ ТЕБЕ СПИСОК СООБЩЕНИЙ И ВЫВЕДИ ИЗ НЕГО ТОЧНЫЕ ДЕДЛАЙНЫ С УКАЗАНИЕМ ВСЕХ ДАТ. {type2_text} ДОЛЖНЫ БЫТЬ В ПРОМЕЖУТКЕ СЛЕДУЮЩЕЙ {type_text}, СЕГОДНЯ 7ОЕ ФЕВРАЛЯ 2025"
+    system_prompt = f"Ты — помощник, который занимается распределением задач и извлечением важной информации из сообщений. Твоя задача — получить из следующего списка сообщений все точные {type2_text}, указав в ответе дату и время каждого из них. ВАЖНО!: ЕСЛИ ДАТА НЕ СОВПАДАЕТ С ПРОМЕЖУТКОМ, ЕЁ УКАЗЫВАТЬ НЕ НУЖНО, ЕСЛИ НИЧЕГО НЕТ, ТО ОТВЕТЬ ПУСТЫМ ОТВЕТОМ {type2_text} должны быть в пределах следующего временного интервала: с сегодняшнего дня (07.02.2025) в течение 1 {type_text}.Формат вывода:\nДата: [дата]\nОписание: [описание задачи]\nТочное время (если указано): [время]\nТеперь я отправлю тебе список сообщений. Извлеки из них точные {type2_text} с датами и временем (если они указаны), соответствующие указанному временному промежутку."
     user_prompt = text
     print(user_prompt)
     body = {
@@ -119,6 +120,7 @@ async def process_chat_summary(
             type2_text = "ПРОВЕДЕНИЕ ДОСУГА"
         if type == "networking":
             type2_text = "НЕТВОРКИНГИ"
+        print('\n\n\n', type2_text, type, '\n\n\n')
         message = await bot.send_message(
             user_id, f"⏳ Обработка сообщений за {type_text}..."
         )

@@ -26,6 +26,7 @@ class Message(Base):
     chat_id = Column(Integer, index=True)
     user_id = Column(Integer)
     message_text = Column(Text)
+    message_id = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.datetime.now())
 
 
