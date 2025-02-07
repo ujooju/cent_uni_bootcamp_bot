@@ -10,11 +10,11 @@ from tg_bot.models import engine, Message
 from yandex_cloud_ml_sdk import YCloudML
 import time
 import requests
+import os
 
-
-TOKEN = "6601199652:AAFqDLPPhHEXEmdpVZmAT4iQKXXXBaNzkh4"
-YANDEX_FOLDER_ID = "b1gug7c74crq38i2spt2"
-YANDEX_API_KEY = "AQVN2VdnEpiYARjmZXK4bO4GYyeeIdPqcNba3pGY"
+TOKEN = os.getenv("TOKEN")
+YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID")
+YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
 sdk = YCloudML(folder_id=YANDEX_FOLDER_ID, auth=YANDEX_API_KEY)
 
 

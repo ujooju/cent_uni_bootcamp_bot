@@ -3,12 +3,13 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from httpx import get
 from tg_bot.config import load_config
-
+from os import getenv
 from tg_bot.handlers import register_main_handlers
 
 logger = logging.getLogger(__name__)
-
+getenv.load_dotenv()
 
 def register_all_filters(dp):
     return None
