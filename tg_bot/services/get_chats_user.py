@@ -1,7 +1,5 @@
-import asyncio
 from aiogram import Bot
 from tg_bot.models import get_chat_ids_from_db
-from tg_bot.models.DBSM import Session
 import logging
 
 logger = logging.getLogger(__name__)
