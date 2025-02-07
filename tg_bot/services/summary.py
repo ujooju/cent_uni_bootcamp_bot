@@ -1,4 +1,5 @@
 import asyncio
+import re
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
@@ -72,7 +73,7 @@ async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str) -> st
 
     while True:
         response = requests.get(url, headers=headers)
-        print(done)
+        print(response.json())
         done = response.json()["done"]
         if done:
             break
