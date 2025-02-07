@@ -26,17 +26,17 @@ class Message(Base):
     chat_id = Column(Integer, index=True)
     user_id = Column(Integer)
     message_text = Column(Text)
-    message_id = Column(Text, nullable=True)
+    link = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.datetime.now())
 
 
 Base.metadata.create_all(bind=engine)
 
 
-def save_message_to_db(chat_id: int, user_id: int, message_text: str):
+def save_message_to_db(chat_id: int, user_id: int, message_text: str, link:str):
     Session = sessionmaker()
     session = Session(bind=engine)
-    db_message = Message(chat_id=chat_id, user_id=user_id, message_text=message_text)
+    db_message = Message(chat_id=chat_id, user_id=user_id, message_text=message_text, link=link)
     session.add(db_message)
     session.commit()
     session.close()
