@@ -72,6 +72,7 @@ async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str) -> st
 
     while True:
         response = requests.get(url, headers=headers)
+        print(done)
         done = response.json()["done"]
         if done:
             break
