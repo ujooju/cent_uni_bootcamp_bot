@@ -3,3 +3,4 @@ aioredis
 environs == 8.0.0
 sqlalchemy>=2.0.0
 pytz==2025.1
+yandex-cloud-ml-sdk

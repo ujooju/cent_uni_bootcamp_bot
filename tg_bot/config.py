@@ -8,7 +8,6 @@ class TgBot:
     admin_ids: list[int]
 
 
-
 @dataclass
 class Config:
     tg_bot: TgBot
@@ -19,9 +18,7 @@ def load_config(path: str = None):
     env.read_env(path)
 
     return Config(
-
         tg_bot=TgBot(
-            token=env.str("BOT_TOKEN"),
-            admin_ids=list(map(int, env.list("ADMINS")))
+            token=env.str("BOT_TOKEN"), admin_ids=list(map(int, env.list("ADMINS")))
         )
     )
