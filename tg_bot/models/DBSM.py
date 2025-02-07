@@ -33,7 +33,7 @@ class Message(Base):
 Base.metadata.create_all(bind=engine)
 
 
-def save_message_to_db(chat_id: int, user_id: int, message_text: str, link:str):
+def save_message_to_db(chat_id: int, user_id: int, message_text: str, link:str=None):
     Session = sessionmaker()
     session = Session(bind=engine)
     db_message = Message(chat_id=chat_id, user_id=user_id, message_text=message_text, link=link)
