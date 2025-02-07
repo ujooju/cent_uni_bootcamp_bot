@@ -60,9 +60,11 @@ async def save_message_handler(message: types.Message):
         try:
             print(message.as_json())
             save_message_to_db(message.chat.id, message.from_user.id, message.text, f"https://t.me/{message.chat.username}/{message.message_id}")
+            print("SAVE MESSAGE", message.chat.id, message.from_user.id, message.text, f"https://t.me/{message.chat.username}/{message.message_id}")
         except:
             print(message.as_json())
             save_message_to_db(message.chat.id, message.from_user.id, message.text)
+            print("SAVE MESSAGE", message.chat.id, message.from_user.id, message.text)
         return
     chats = await get_user_chats(target_user_id=message.from_user.id, bot=message.bot)
     print(chats, " - CHATS")
