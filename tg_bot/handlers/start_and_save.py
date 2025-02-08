@@ -184,7 +184,7 @@ async def show_category_selection(message: types.Message, chats, state: FSMConte
     chat_count = len(selected_chats)
     chat_text = "чат" if chat_count == 1 else "чата" if 2 <= chat_count <= 4 else "чатов"
     async with state.proxy() as data:
-        data['selected_chats'] = selected_chats
+        data['selected_chats'] = selected_chats[0]["chat_id"]
     
     text = welcome_text + (
         f"У Вас есть единственный чат: *{selected_chats[0]['title']}*\n"
