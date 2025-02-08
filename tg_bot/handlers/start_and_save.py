@@ -150,7 +150,7 @@ async def start_handler(message: types.Message, state: FSMContext, user_id: int 
         data['selected_chats'] = data.get('selected_chats', [])
         
         if len(chats) == 1:
-            data['selected_chats'] = chats
+            data['selected_chats'] = chats[0]["chat_id"]
             await show_category_selection(message, chats, state)
             return
 
@@ -184,7 +184,7 @@ async def show_category_selection(message: types.Message, chats, state: FSMConte
     chat_count = len(selected_chats)
     chat_text = "чат" if chat_count == 1 else "чата" if 2 <= chat_count <= 4 else "чатов"
     async with state.proxy() as data:
-        data['selected_chats'] = selected_chats[0]["chat_id"]
+        data['selected_chats'] = [selected_chats[0]["chat_id"]]
     
     text = welcome_text + (
         f"У Вас есть единственный чат: *{selected_chats[0]['title']}*\n"
