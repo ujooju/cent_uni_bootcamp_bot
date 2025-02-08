@@ -63,6 +63,8 @@ async def yandex_gpt_summarize(text: str, user_prompt: str, message: types.Messa
     today_date = datetime.now(pytz.timezone("Europe/Moscow")).strftime("%d.%m.%Y")
     system_prompt = ( 
         "!ЗАМЕНИ ВСЕ МАТНЫЕ И НЕЦЕНЗУРНЫЕ СЛОВА НА ********"
+        "!ЗАМЕНИ ВСЕ РЕАЛЬНЫЕ ИМЕНА, НАЦИОНАЛЬНОСТИ И СТРАНЫ НА ******"
+        "!ЕСЛИ ЧТО-ТО НЕ УСТРАИВАЕТ В ЗАПРОСЕ, ЗАМЕНИ НА *****"
         "Ты — интеллектуальный ассистент, анализирующий весь контекст чата. "
         "Ваша задача — выполнить запрос пользователя, учитывая все доступные сообщения. "
         "Чат представлен в формате списка, где каждое сообщение включает текст, дату и ссылку на оригинал.\n\n"
@@ -81,7 +83,7 @@ async def yandex_gpt_summarize(text: str, user_prompt: str, message: types.Messa
 
     body = {
         "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-32k/rc",
-        "completionOptions": {"stream": False, "temperature": 0.44, "maxTokens": 2000000},
+        "completionOptions": {"stream": False, "temperature": 0.1, "maxTokens": 2000000},
         "messages": [
             {"role": "system", "text": system_prompt},
             {"role": "user", "text": user_prompt},
