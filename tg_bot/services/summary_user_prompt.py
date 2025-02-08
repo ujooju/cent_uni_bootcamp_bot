@@ -85,7 +85,7 @@ async def yandex_gpt_summarize(text: str, user_prompt: str, message: types.Messa
     # print(user_prompt, "\n\n\n")
     body = {
         "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-32k/rc",
-        "completionOptions": {"stream": False, "temperature": 0.1, "maxTokens": 2000000},
+        "completionOptions": {"stream": False, "temperature": 0.44, "maxTokens": 2000000},
         "messages": [
             {"role": "system", "text": system_prompt},
             {"role": "user", "text": user_prompt},
