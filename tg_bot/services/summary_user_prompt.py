@@ -137,6 +137,7 @@ async def summarize_messages(messages: list, user_prompt: str, max_percent: int,
             pass
         progress = (max_percent*2 + percent_now)//3
         summary = await yandex_gpt_summarize(all_text, user_prompt, message, progress)
+        print(summary)
         summary_all.append(summary)
         print(i, "DONE")
     print("TEST OTHER")
