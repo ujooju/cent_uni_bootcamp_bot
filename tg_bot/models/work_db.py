@@ -1,14 +1,17 @@
 import logging
 
 from sqlalchemy import exists
+from sqlalchemy.orm import Session
 
-from .DBSM import Chat, engine, Message, sessionmaker
+from .DBSM import Chat, Message, engine, sessionmaker
 
 logger = logging.getLogger(__name__)
 
-# ---------------------- start and save chat ---------------------- #
 
-def create_chat(chat_id):
+# ---------------------- Chat management ---------------------- #
+
+
+def create_chat(chat_id: int) -> bool:
     Session = sessionmaker(bind=engine, expire_on_commit=False)
     with Session() as session:
         if not session.query(exists().where(Chat.id == chat_id)).scalar():
@@ -17,26 +20,27 @@ def create_chat(chat_id):
             return True
         return False
 
-def save_message_to_db(chat_id: int, user_id: int, message_text: str, link:str=None):
-    Session = sessionmaker()
-    session = Session(bind=engine)
-    db_message = Message(chat_id=chat_id, user_id=user_id, message_text=message_text, link=link)
-    session.add(db_message)
-    session.commit()
-    session.close()
 
-        
-# -------------------------- main handlers -------------------------- #
+def save_message_to_db(
+    chat_id: int, user_id: int, message_text: str, link: str = None
+) -> None:
+    Session = sessionmaker(bind=engine)
+    with Session() as session:
+        db_message = Message(
+            chat_id=chat_id, user_id=user_id, message_text=message_text, link=link
+        )
+        session.add(db_message)
+        session.commit()
 
 
+# ---------------------- Service functions ---------------------- #
 
 
-# -------------------------- service handlers ------------------------ #
-async def get_chat_ids_from_db():
+def get_chat_ids_from_db() -> list[int]:
     try:
-        with sessionmaker(bind=engine)() as session:
+        Session = sessionmaker(bind=engine)
+        with Session() as session:
             return [chat.chat_id for chat in session.query(Chat).all()]
     except Exception as e:
-        logger.error(f"Ошибка получения чатов из БД: {str(e)}")
+        logger.error(f"Ошибка получения чатов из БД: {e}", exc_info=True)
         return []
-    

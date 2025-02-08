@@ -16,36 +16,39 @@ YANDEX_FOLDER_ID = config.yandex_api.folder_id
 YANDEX_API_KEY = config.yandex_api.api_key
 
 sdk = YCloudML(folder_id=YANDEX_FOLDER_ID, auth=YANDEX_API_KEY)
-def check_data(i, today_date, type_text):
 
+
+def check_data(i, today_date, type_text):
     days = int(type_text)
-    
-    date_match = re.search(r'\*\*Дата\*\*: (\d{2}\.\d{2}\.\d{4})', i)
+
+    date_match = re.search(r"\*\*Дата\*\*: (\d{2}\.\d{2}\.\d{4})", i)
     if not date_match:
         return i
     event_date = datetime.strptime(date_match.group(1), "%d.%m.%Y")
     today = datetime.strptime(today_date, "%d.%m.%Y")
     min_date = today
-    max_date = today + timedelta(days=days) 
+    max_date = today + timedelta(days=days)
     if min_date <= event_date <= max_date:
         return i
     else:
         return ""
-    
+
+
 def remove_first_line(i):
     lines = i.split("\n")
     if len(lines) > 1:
         return "\n".join(lines[1:])
     else:
         return i
-    
+
+
 def check_category(i, type_text):
-    category = i.split("\n")[0].split(":")[-1].strip() 
-    
+    category = i.split("\n")[0].split(":")[-1].strip()
+
     type2_text = {
         "deadlines": "дедлайны",
         "dosug": "проведение досуга",
-        "networking": "нетворкинги"
+        "networking": "нетворкинги",
     }
     if category not in ["Дедлайн", "Досуг", "Нетворкинг"]:
         return remove_first_line(i)
@@ -57,6 +60,7 @@ def check_category(i, type_text):
         return ""
 
     return remove_first_line(i)
+
 
 async def get_chat_history(chat_id: int) -> list:
     try:
@@ -75,7 +79,14 @@ async def get_chat_history(chat_id: int) -> list:
         except:
             pass
 
-async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str, message: types.Message=None, percent=None) -> str:
+
+async def yandex_gpt_summarize(
+    text: str,
+    type_text: str,
+    type2_text: str,
+    message: types.Message = None,
+    percent=None,
+) -> str:
     today_date = datetime.now(pytz.timezone("Europe/Moscow")).strftime("%d.%m.%Y")
     system_prompt = system_prompt = f"""
         Ты — помощник, который анализирует сообщения и извлекает из них ключевую информацию.
@@ -167,8 +178,6 @@ async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str, messa
         **Ссылка**: [ссылка, если имеется и не равна None]
         """
 
-
-
     body = {
         "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-32k/rc",
         "completionOptions": {"stream": False, "temperature": 0.3, "maxTokens": 20000},
@@ -177,21 +186,29 @@ async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str, messa
             {"role": "user", "text": text},
         ],
     }
-    
+
     url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completionAsync"
-    headers = {"Content-Type": "application/json", "Authorization": f"Api-Key {YANDEX_API_KEY}"}
-    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Api-Key {YANDEX_API_KEY}",
+    }
+
     response = requests.post(url, headers=headers, json=body)
     operation_id = response.json().get("id")
     if message:
         await message.edit_text(f"⏳ Обработка сообщений: {percent}%")
-    
+
     while True:
-        response = requests.get(f"https://llm.api.cloud.yandex.net:443/operations/{operation_id}", headers=headers)
+        response = requests.get(
+            f"https://llm.api.cloud.yandex.net:443/operations/{operation_id}",
+            headers=headers,
+        )
         if response.json().get("done"):
             break
         time.sleep(0.5)
-    data = response.json()["response"]["alternatives"][0]["message"]["text"].split("\n\n")
+    data = response.json()["response"]["alternatives"][0]["message"]["text"].split(
+        "\n\n"
+    )
     text = ""
     for i in data:
         l = False
@@ -206,47 +223,82 @@ async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str, messa
             text += i.replace("**Ссылка**: None", "") + "\n\n"
         if not l and i != "":
             text += i + "\n\n"
-    
+
     return text
 
-async def summarize_messages(messages: list, type_text: str, type2_text: str, max_percent: int, percent_now:int, message: types.Message, batch_size: int = 50) -> str:
+
+async def summarize_messages(
+    messages: list,
+    type_text: str,
+    type2_text: str,
+    max_percent: int,
+    percent_now: int,
+    message: types.Message,
+    batch_size: int = 50,
+) -> str:
     unique_messages = []
-    seen_texts = set() 
+    seen_texts = set()
 
     for msg in messages:
         if msg["text"] not in seen_texts:
             unique_messages.append(msg)
             seen_texts.add(msg["text"])
-    all_text = "\n".join([f'[{msg["text"]}] - [{msg["date"]}] - [{msg["link"]}]' for msg in unique_messages])
-    progress = (max_percent + percent_now*2)//3
+    all_text = "\n".join(
+        [
+            f'[{msg["text"]}] - [{msg["date"]}] - [{msg["link"]}]'
+            for msg in unique_messages
+        ]
+    )
+    progress = (max_percent + percent_now * 2) // 3
     await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
-    progress = (max_percent*2 + percent_now)//3
-    summary = await yandex_gpt_summarize(all_text, type_text, type2_text, message, progress)
-    
+    progress = (max_percent * 2 + percent_now) // 3
+    summary = await yandex_gpt_summarize(
+        all_text, type_text, type2_text, message, progress
+    )
+
     return summary
 
-async def process_chat_summary(chats: list[int], user_id: int, days: str, category: str, bot: Bot, message: types.Message):
-    type_text = {"period_month": "31", "period_week": "7", "period_day": "1"}.get(days, "1")
-    type2_text = {"deadlines": "дедлайны", "dosug": "проведение досуга", "networking": "нетворкинги"}.get(category, "события")
+
+async def process_chat_summary(
+    chats: list[int],
+    user_id: int,
+    days: str,
+    category: str,
+    bot: Bot,
+    message: types.Message,
+):
+    type_text = {"period_month": "31", "period_week": "7", "period_day": "1"}.get(
+        days, "1"
+    )
+    type2_text = {
+        "deadlines": "дедлайны",
+        "dosug": "проведение досуга",
+        "networking": "нетворкинги",
+    }.get(category, "события")
     # await message.edit_reply_markup()
     message = await message.edit_text(f"⏳ Обработка сообщений за {type_text}...")
     summaries = []
     total_chats = len(chats)
-    
+
     for index, chat_id in enumerate(chats, start=1):
         messages = await get_chat_history(chat_id)
         if messages:
             max_percent = (index / total_chats) * 100
-            percent_now = ((index-1) / total_chats) * 100
-            summary = await summarize_messages(messages, type_text, type2_text, max_percent, percent_now, message)
+            percent_now = ((index - 1) / total_chats) * 100
+            summary = await summarize_messages(
+                messages, type_text, type2_text, max_percent, percent_now, message
+            )
             if summary.strip():
                 summaries.append(summary)
         progress = round((index / total_chats) * 100)
         await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
-    
+
     if summaries:
         final_summary = "\n------------------------------\n".join(summaries)
-        await message.edit_text(f"📊 **Итоговая выжимка:**\n\n{final_summary}", parse_mode="Markdown")
+        await message.edit_text(
+            f"📊 **Итоговая выжимка:**\n\n{final_summary}", parse_mode="Markdown"
+        )
     else:
-        await message.edit_text("📊 **Нет релевантных данных за выбранный период.**", parse_mode="Markdown")
-
+        await message.edit_text(
+            "📊 **Нет релевантных данных за выбранный период.**", parse_mode="Markdown"
+        )

@@ -4,6 +4,7 @@ from aiogram.types import (
     InlineKeyboardButton,
 )
 
+
 def choose_period():
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton(text="Завтра", callback_data="period_tomorrow"))
@@ -26,6 +27,8 @@ def choose_category():
         InlineKeyboardButton(text="Дедлайны", callback_data="CATEGORY_deadlines")
     )
     markup.add(
-        InlineKeyboardButton(text="Написать запрос для анализа", callback_data="MYCATEGORY")
+        InlineKeyboardButton(
+            text="Написать запрос для анализа", callback_data="MYCATEGORY"
+        )
     )
     return markup

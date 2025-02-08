@@ -17,7 +17,7 @@ async def add_handler(message: types.Message):
     bot = message.bot
     bot_id = (await bot.get_me()).id
     new_members = message.new_chat_members
-    
+
     welcome_text = (
         "Приветствую вас! 😊 Спасибо, что добавили меня в этот канал! "
         "Я очень рад быть здесь!\n\nЧто я могу для вас сделать? 🤔\n\n"
@@ -29,12 +29,10 @@ async def add_handler(message: types.Message):
     )
     if any(member.id == bot_id for member in new_members):
         chat_id = message.chat.id
-        
+
         try:
             if create_chat(chat_id):
-                await asyncio.gather(
-                    message.answer(welcome_text)
-                )
+                await asyncio.gather(message.answer(welcome_text))
             else:
                 logger.info(f"Бот повторно добавлен в чат {chat_id}")
         except MessageToDeleteNotFound:
@@ -58,6 +56,7 @@ async def save_message_handler(message: types.Message) -> None:
         logger.error(f"Ошибка обработки сообщения: {str(e)}", exc_info=True)
         await handle_error(message)
 
+
 async def handle_private_chat(message: types.Message) -> None:
     await message.answer(
         "⚠️ Вы выбрали не ту команду. Для старта используйте: /start\n\n"
@@ -66,6 +65,7 @@ async def handle_private_chat(message: types.Message) -> None:
         "2. Выдайте права администратора\n"
         "3. Напишите любое сообщение в группе"
     )
+
 
 async def process_group_message(message: types.Message) -> bool:
     message_link = generate_message_link(message)
@@ -76,15 +76,16 @@ async def process_group_message(message: types.Message) -> bool:
             chat_id=message.chat.id,
             user_id=message.from_user.id,
             message_text=message_text,
-            link=message_link
+            link=message_link,
         )
-        
+
         log_message_details(message, message_link)
         return True
 
     except Exception as e:
         logger.error(f"Ошибка сохранения сообщения: {str(e)}", exc_info=True)
         return False
+
 
 def generate_message_link(message: types.Message) -> Optional[str]:
     try:
@@ -95,15 +96,17 @@ def generate_message_link(message: types.Message) -> Optional[str]:
         logger.warning(f"Чат {message.chat.id} не имеет username")
         return None
 
+
 def log_message_details(message: types.Message, link: Optional[str]) -> None:
     log_data = {
         "chat_id": message.chat.id,
         "user_id": message.from_user.id,
         "message_id": message.message_id,
         "text": message.text,
-        "link": link
+        "link": link,
     }
     logger.info("Сообщение сохранено: %s", log_data)
+
 
 async def handle_error(message: types.Message) -> None:
     """Отправляет пользователю сообщение об ошибке."""
@@ -111,7 +114,7 @@ async def handle_error(message: types.Message) -> None:
         "⚠️ Произошла ошибка при обработке сообщения. "
         "Попробуйте повторить позже или обратитесь в поддержку."
     )
-    
+
     try:
         await message.answer(error_text)
     except TelegramAPIError as e:
@@ -140,32 +143,41 @@ async def start_handler(message: types.Message, state: FSMContext, user_id: int 
 
     if message.chat.id < 0:
         return
-    
+
     target_user = user_id or message.from_user.id
     chats = await get_user_chats(target_user_id=target_user, bot=message.bot)
     async with state.proxy() as data:
-        data['selected_chats'] = data.get('selected_chats', [])
-        
+        data["selected_chats"] = data.get("selected_chats", [])
+
         if len(chats) == 1:
-            data['selected_chats'] = [chats[0]["chat_id"]]
+            data["selected_chats"] = [chats[0]["chat_id"]]
             await show_category_selection(message, chats, state)
             return
 
         if chats:
-            keyboard = await generate_chats_keyboard(chats, data['selected_chats'])
+            keyboard = await generate_chats_keyboard(chats, data["selected_chats"])
             try:
-                await message.edit_text(welcome_text, parse_mode="Markdown", reply_markup=keyboard)
+                await message.edit_text(
+                    welcome_text, parse_mode="Markdown", reply_markup=keyboard
+                )
             except:
-                await message.answer(welcome_text, parse_mode="Markdown", reply_markup=keyboard)
+                await message.answer(
+                    welcome_text, parse_mode="Markdown", reply_markup=keyboard
+                )
         else:
             keyboard = get_help_markup()
             try:
-                await message.edit_text(no_chats_text, parse_mode="Markdown", reply_markup=keyboard)
+                await message.edit_text(
+                    no_chats_text, parse_mode="Markdown", reply_markup=keyboard
+                )
             except:
-                await message.answer(no_chats_text, parse_mode="Markdown", reply_markup=keyboard)
-    
+                await message.answer(
+                    no_chats_text, parse_mode="Markdown", reply_markup=keyboard
+                )
+
     await SummaryState.choosing_chats.set()
-    
+
+
 async def show_category_selection(message: types.Message, chats, state: FSMContext):
     keyboard = choose_category()
     welcome_text = (
@@ -176,18 +188,20 @@ async def show_category_selection(message: types.Message, chats, state: FSMConte
         "📅 *Планировать активности* на ближайший месяц\n"
         "🤝 *Рекомендовать волонтерские мероприятия*\n\n"
     ).format(user_name=message.from_user.full_name)
-  
+
     selected_chats = chats
     chat_count = len(selected_chats)
-    chat_text = "чат" if chat_count == 1 else "чата" if 2 <= chat_count <= 4 else "чатов"
+    chat_text = (
+        "чат" if chat_count == 1 else "чата" if 2 <= chat_count <= 4 else "чатов"
+    )
     async with state.proxy() as data:
-        data['selected_chats'] = [selected_chats[0]["chat_id"]]
-    
+        data["selected_chats"] = [selected_chats[0]["chat_id"]]
+
     text = welcome_text + (
         f"У Вас есть единственный чат: *{selected_chats[0]['title']}*\n"
         "Теперь выберите категорию:"
     )
-    
+
     try:
         await message.edit_text(text, reply_markup=keyboard)
     except:
@@ -195,15 +209,17 @@ async def show_category_selection(message: types.Message, chats, state: FSMConte
 
     await SummaryState.choosing_category.set()
 
+
 async def start_query_handler(callback: types.CallbackQuery, state: FSMContext):
     return await start_handler(callback.message, state, callback.from_user.id)
+
 
 def register_start_handlers(dp: Dispatcher):
     dp.register_message_handler(start_handler, commands=["start"])
     dp.register_message_handler(start_handler, commands=["start"], state="*")
     dp.register_callback_query_handler(start_query_handler, text="CHECK_BOT")
     dp.register_callback_query_handler(start_query_handler, text="CHECK_BOT", state="*")
-    dp.register_message_handler(save_message_handler, content_types=types.ContentType.TEXT)
+    dp.register_message_handler(
+        save_message_handler, content_types=types.ContentType.TEXT
+    )
     dp.register_message_handler(add_handler, content_types=["new_chat_members"])
-    
-    
