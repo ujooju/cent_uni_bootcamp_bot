@@ -1,26 +1,23 @@
-import asyncio
-from math import e
 import re
-from aiogram import Bot, Dispatcher, types
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher import FSMContext
-from datetime import datetime, timedelta
-import pytz
-from sqlalchemy import select
-from sqlalchemy.orm import sessionmaker
-from tg_bot.models import engine, Message
-from yandex_cloud_ml_sdk import YCloudML
 import time
-import requests
-import os
+from datetime import datetime, timedelta
 
-TOKEN = os.getenv("TOKEN")
-# YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID")
-# YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
-YANDEX_FOLDER_ID = "b1gug7c74crq38i2spt2"
-YANDEX_API_KEY = "AQVN2VdnEpiYARjmZXK4bO4GYyeeIdPqcNba3pGY"
-# print(YANDEX_FOLDER_ID, YANDEX_API_KEY)
+import pytz
+import requests
+from aiogram import Bot, types
+from sqlalchemy.orm import sessionmaker
+from yandex_cloud_ml_sdk import YCloudML
+
+from tg_bot.config import load_config
+from tg_bot.models import engine, Message
+
+
+config = load_config(".env")
+YANDEX_FOLDER_ID = config.yandex_api.folder_id
+YANDEX_API_KEY = config.yandex_api.api_key
+
 sdk = YCloudML(folder_id=YANDEX_FOLDER_ID, auth=YANDEX_API_KEY)
+
 def check_data(i, today_date, type_text):
 
     days = int(type_text)
@@ -55,7 +52,6 @@ async def get_chat_history(chat_id: int) -> list:
             for msg in result
         ]
     except Exception as e:
-        print(f"Ошибка получения истории: {e}")
         return []
     finally:
         session.close()
@@ -71,8 +67,6 @@ async def yandex_gpt_summarize(text: str, user_prompt: str, message: types.Messa
         "Cообщения в формате [text] - [date] - [link]"
         f"{text}"
     )
-    print(system_prompt, "\n\n\n")
-    print(user_prompt, "\n\n\n")
     body = {
         "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-32k/rc",
         "completionOptions": {"stream": False, "temperature": 0.44, "maxTokens": 2000000},
@@ -85,7 +79,6 @@ async def yandex_gpt_summarize(text: str, user_prompt: str, message: types.Messa
     url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completionAsync"
     headers = {"Content-Type": "application/json", "Authorization": f"Api-Key {YANDEX_API_KEY}"}
     response = requests.post(url, headers=headers, json=body)
-    print(response)
     operation_id = response.json().get("id")
     try:
         if message:
@@ -127,12 +120,8 @@ async def summarize_messages(messages: list, user_prompt: str, max_percent: int,
             pass
         progress = (max_percent*2 + percent_now)//3
         summary = await yandex_gpt_summarize(all_text, user_prompt, message, progress)
-        print(summary)
         summary_all.append(summary)
-        print(i, "DONE")
-    print("TEST OTHER")
     summary = await yandex_gpt_summarize("\n".join(summary_all), user_prompt, message, progress)
-    print("\n SUMMARY:", summary)
     return summary
 
 async def process_chat_summary_user_prompt(chats: list[int], user_prompt: str, bot: Bot, message: types.Message):
@@ -151,8 +140,6 @@ async def process_chat_summary_user_prompt(chats: list[int], user_prompt: str, b
             summary = await summarize_messages(messages, user_prompt, max_percent, percent_now, message)
             if summary.strip():
                 summaries.append(summary)
-        # progress = round((index / total_chats) * 100)
-        # await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
     
     if summaries:
         try:

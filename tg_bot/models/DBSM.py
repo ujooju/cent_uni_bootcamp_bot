@@ -1,13 +1,13 @@
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import Column, Integer, BigInteger
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
 import datetime
+from urllib.parse import quote_plus
 
-engine = create_engine("sqlite:///sqlite.db")
-Session = sessionmaker()
-session = Session(bind=engine)
+from sqlalchemy import BigInteger, Column, DateTime, Integer, Text, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+
+from tg_bot.config import load_config
+
+config = load_config(".env")
+engine = create_engine(f"postgresql://{config.db_config.user}:%s@{config.db_config.host}/{config.db_config.database}" % quote_plus(f"{config.db_config.password}", encoding='utf8'))
 
 Base = declarative_base()
 

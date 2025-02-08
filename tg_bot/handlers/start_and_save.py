@@ -1,12 +1,9 @@
-from pydoc import text
-import stat
 from aiogram import types, Dispatcher
 from tg_bot.models import save_message_to_db
 from tg_bot.models import create_chat
 import asyncio
 from tg_bot.services import get_user_chats
-from tg_bot.keyboards import choose_chats, get_help_markup, choose_category, generate_chats_keyboard
-from datetime import datetime, timedelta
+from tg_bot.keyboards import get_help_markup, choose_category, generate_chats_keyboard
 from aiogram.utils.exceptions import MessageToDeleteNotFound, TelegramAPIError
 from typing import Optional
 from aiogram.dispatcher import FSMContext

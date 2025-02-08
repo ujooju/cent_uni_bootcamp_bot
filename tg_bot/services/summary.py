@@ -1,23 +1,19 @@
-import asyncio
 import re
-from aiogram import Bot, Dispatcher, types
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher import FSMContext
-from datetime import datetime, timedelta
-import pytz
-from sqlalchemy import select
-from sqlalchemy.orm import sessionmaker
-from tg_bot.models import engine, Message
-from yandex_cloud_ml_sdk import YCloudML
 import time
-import requests
-import os
+from datetime import datetime, timedelta
 
-TOKEN = os.getenv("TOKEN")
-YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID")
-YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
-YANDEX_FOLDER_ID = "b1gug7c74crq38i2spt2"
-YANDEX_API_KEY = "AQVN2VdnEpiYARjmZXK4bO4GYyeeIdPqcNba3pGY"
+import pytz
+import requests
+from aiogram import Bot, types
+from sqlalchemy.orm import sessionmaker
+from yandex_cloud_ml_sdk import YCloudML
+
+from tg_bot.config import load_config
+from tg_bot.models import engine, Message
+
+config = load_config(".env")
+YANDEX_FOLDER_ID = config.yandex_api.folder_id
+YANDEX_API_KEY = config.yandex_api.api_key
 
 sdk = YCloudML(folder_id=YANDEX_FOLDER_ID, auth=YANDEX_API_KEY)
 def check_data(i, today_date, type_text):
@@ -54,13 +50,10 @@ def check_category(i, type_text):
     if category not in ["Дедлайн", "Досуг", "Нетворкинг"]:
         return remove_first_line(i)
     if category == "Дедлайн" and type_text != type2_text["deadlines"]:
-        print("WRONG", type_text, type2_text["deadlines"])
         return ""
     elif category == "Досуг" and type_text != type2_text["dosug"]:
-        print("WRONG", type_text, type2_text["dosug"])
         return ""
     elif category == "Нетворкинг" and type_text != type2_text["networking"]:
-        print("WRONG", type_text, type2_text["networking"])
         return ""
 
     return remove_first_line(i)
@@ -75,13 +68,13 @@ async def get_chat_history(chat_id: int) -> list:
             for msg in result
         ]
     except Exception as e:
-        print(f"Ошибка получения истории: {e}")
         return []
     finally:
         try:
             session.close()
         except:
             pass
+
 async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str, message: types.Message=None, percent=None) -> str:
     today_date = datetime.now(pytz.timezone("Europe/Moscow")).strftime("%d.%m.%Y")
     system_prompt = system_prompt = f"""
@@ -189,8 +182,6 @@ async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str, messa
     headers = {"Content-Type": "application/json", "Authorization": f"Api-Key {YANDEX_API_KEY}"}
     
     response = requests.post(url, headers=headers, json=body)
-    print(response)
-    print(response.text)
     operation_id = response.json().get("id")
     if message:
         await message.edit_text(f"⏳ Обработка сообщений: {percent}%")

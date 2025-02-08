@@ -1,18 +1,12 @@
-import stat
-from aiogram import Dispatcher, Bot, types
-from tg_bot import keyboards
-from tg_bot.models import Chat, sessionmaker, engine, save_message_to_db
-from tg_bot.models import create_chat
-import asyncio
-from tg_bot.services import get_user_chats, process_chat_summary, process_chat_summary_user_prompt
-from tg_bot.keyboards import choose_chats, choose_period, choose_category, check_again_keyboard, generate_chats_keyboard
-from datetime import datetime, timedelta
-from aiogram.utils.exceptions import MessageToDeleteNotFound, TelegramAPIError
-import pytz
-from typing import Optional
-from tg_bot.states import SummaryState
-from aiogram.dispatcher import FSMContext
+from datetime import timedelta
 import logging
+
+from aiogram import Dispatcher, types
+from aiogram.dispatcher import FSMContext
+
+from tg_bot.keyboards import check_again_keyboard, choose_category, choose_period, generate_chats_keyboard
+from tg_bot.services import get_user_chats, process_chat_summary, process_chat_summary_user_prompt
+from tg_bot.states import SummaryState
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +173,6 @@ def register_main_handlers(dp: Dispatcher):
         lambda c: c.data.startswith("period_"),
         state=SummaryState.choosing_period,
     )
-
     dp.register_callback_query_handler(help_adding_handler, text="HELP_ADDING_TO_CHAT")
     dp.register_callback_query_handler(help_adding_handler, text="HELP_ADDING_TO_CHAT", state="*")
     dp.register_message_handler(get_query_ai, state=SummaryState.get_query)

@@ -3,11 +3,10 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from httpx import get
-from tg_bot.config import load_config, setup_logger
-
-from tg_bot.handlers import register_main_handlers, register_start_handlers
 from dotenv import load_dotenv
+
+from tg_bot.config import load_config, setup_logger
+from tg_bot.handlers import register_main_handlers, register_start_handlers
 
 load_dotenv()
 logger = logging.getLogger(__name__)

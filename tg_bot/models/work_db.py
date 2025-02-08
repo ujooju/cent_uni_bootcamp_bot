@@ -1,6 +1,8 @@
-from sqlalchemy import exists
-from .DBSM import Chat, sessionmaker, Message, engine
 import logging
+
+from sqlalchemy import exists
+
+from .DBSM import Chat, engine, Message, sessionmaker
 
 logger = logging.getLogger(__name__)
 
