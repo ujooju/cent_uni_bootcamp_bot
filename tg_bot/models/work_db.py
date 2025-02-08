@@ -30,7 +30,7 @@ def save_message_to_db(chat_id: int, user_id: int, message_text: str, link:str=N
 
 
 # -------------------------- service handlers ------------------------ #
-async def get_chat_ids_from_db() -> list[int]:
+async def get_chat_ids_from_db():
     try:
         with sessionmaker(bind=engine)() as session:
             return [chat.chat_id for chat in session.query(Chat).all()]
