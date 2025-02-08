@@ -54,11 +54,14 @@ async def get_query_ai(message: types.Message, state: FSMContext):
     is_personal_query = True
     await state.update_data(category=category)
     await state.update_data(is_personal_query=is_personal_query)
-    keyboard = choose_period()
-    await message.answer(
-        "📅 <b>Супер!</b> Теперь укажите период: 🔜📆", reply_markup=keyboard
+    user_data = await state.get_data()
+
+    chats = user_data.get("selected_chats")
+
+    result = await process_chat_summary_user_prompt(
+        chats, category, message.bot, message
     )
-    await state.set_state(SummaryState.choosing_period)
+    await state.finish()
 
 
 # ---- Обработчик выбора периода ----

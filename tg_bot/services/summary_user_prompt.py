@@ -14,10 +14,9 @@ import requests
 import os
 
 TOKEN = os.getenv("TOKEN")
-# YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID")
-# YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
-YANDEX_FOLDER_ID = "b1gug7c74crq38i2spt2"
-YANDEX_API_KEY = "AQVN2VdnEpiYARjmZXK4bO4GYyeeIdPqcNba3pGY"
+YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID")
+YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
+
 # print(YANDEX_FOLDER_ID, YANDEX_API_KEY)
 sdk = YCloudML(folder_id=YANDEX_FOLDER_ID, auth=YANDEX_API_KEY)
 def check_data(i, today_date, type_text):
@@ -128,11 +127,11 @@ async def summarize_messages(messages: list, user_prompt: str, max_percent: int,
     
     return summary
 
-async def process_chat_summary_user_prompt(chats: list[int], user_id: int, days: str, user_prompt: str, bot: Bot, message: types.Message):
+async def process_chat_summary_user_prompt(chats: list[int], user_prompt: str, bot: Bot, message: types.Message):
 
 
     # await message.edit_reply_markup()
-    message = await message.edit_text(f"⏳ Обработка сообщений ...")
+    message = await message.answer(f"⏳ Обработка сообщений ...")
     summaries = []
     total_chats = len(chats)
     

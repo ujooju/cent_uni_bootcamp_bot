@@ -14,11 +14,9 @@ import requests
 import os
 
 TOKEN = os.getenv("TOKEN")
-# YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID")
-# YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
-YANDEX_FOLDER_ID = "b1gug7c74crq38i2spt2"
-YANDEX_API_KEY = "AQVN2VdnEpiYARjmZXK4bO4GYyeeIdPqcNba3pGY"
-# print(YANDEX_FOLDER_ID, YANDEX_API_KEY)
+YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID")
+YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
+
 sdk = YCloudML(folder_id=YANDEX_FOLDER_ID, auth=YANDEX_API_KEY)
 def check_data(i, today_date, type_text):
 
