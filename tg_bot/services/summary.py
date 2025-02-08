@@ -188,7 +188,7 @@ async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str, messa
     
     response = requests.post(url, headers=headers, json=body)
     print(response)
-    # print(response.text)
+    print(response.text)
     operation_id = response.json().get("id")
     if message:
         await message.edit_text(f"⏳ Обработка сообщений: {percent}%")
