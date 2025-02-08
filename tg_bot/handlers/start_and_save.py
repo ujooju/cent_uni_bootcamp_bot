@@ -150,7 +150,7 @@ async def start_handler(message: types.Message, state: FSMContext, user_id: int 
         data['selected_chats'] = data.get('selected_chats', [])
         
         if len(chats) == 1:
-            data['selected_chats'] = chats[0]["chat_id"]
+            data['selected_chats'] = [chats[0]["chat_id"]]
             await show_category_selection(message, chats, state)
             return
 
