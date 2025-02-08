@@ -131,7 +131,7 @@ async def summarize_messages(messages: list, user_prompt: str, max_percent: int,
         progress = (max_percent*2 + percent_now)//3
         summary = await yandex_gpt_summarize(all_text, user_prompt, message, progress)
         summary_all.append(summary)
-    summary = await yandex_gpt_summarize("\n".join(all_text), user_prompt, message, progress)
+    summary = await yandex_gpt_summarize("\n".join(summary_all), user_prompt, message, progress)
     return summary
 
 async def process_chat_summary_user_prompt(chats: list[int], user_prompt: str, bot: Bot, message: types.Message):
