@@ -7,3 +7,4 @@ class SummaryState(StatesGroup):
     choosing_period = State()
     summarizing = State()
     choosing_category = State()
+    get_query = State()

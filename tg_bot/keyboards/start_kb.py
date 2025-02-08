@@ -84,4 +84,7 @@ def choose_category():
     markup.add(
         InlineKeyboardButton(text="Дедлайны", callback_data="CATEGORY_deadlines")
     )
+    markup.add(
+        InlineKeyboardButton(text="Написать запрос для анализа", callback_data="MYCATEGORY")
+    )
     return markup

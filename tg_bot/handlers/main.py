@@ -1,9 +1,10 @@
+import stat
 from aiogram import Dispatcher, Bot, types
 from tg_bot import keyboards
 from tg_bot.models import Chat, sessionmaker, engine, save_message_to_db
 from tg_bot.models import create_chat
 import asyncio
-from tg_bot.services import get_user_chats, process_chat_summary
+from tg_bot.services import get_user_chats, process_chat_summary, process_chat_summary_user_prompt
 from tg_bot.keyboards import choose_chats, choose_period, choose_category, check_again_keyboard, generate_chats_keyboard
 from datetime import datetime, timedelta
 from aiogram.utils.exceptions import MessageToDeleteNotFound, TelegramAPIError
@@ -32,8 +33,29 @@ async def chat_chosen_handler(callback_query: types.CallbackQuery, state: FSMCon
 async def category_chosen_handler(callback_query: types.CallbackQuery, state: FSMContext):
     category = callback_query.data.replace("CATEGORY_", "")
     await state.update_data(category=category)
+    await state.update_data(is_personal_query=False)
     keyboard = choose_period()
     await callback_query.message.edit_text(
+        "📅 <b>Супер!</b> Теперь укажите период: 🔜📆", reply_markup=keyboard
+    )
+    await state.set_state(SummaryState.choosing_period)
+
+
+async def category_enter_handler(callback_query: types.CallbackQuery, state: FSMContext):
+    keyboard = choose_period()
+    await callback_query.message.edit_text(
+        "📅 <b>Супер!</b> Введите текст запроса, который мне надо будет выполнить!"
+    )
+    await state.set_state(SummaryState.get_query)
+
+
+async def get_query_ai(message: types.Message, state: FSMContext):
+    category = message.text
+    is_personal_query = True
+    await state.update_data(category=category)
+    await state.update_data(is_personal_query=is_personal_query)
+    keyboard = choose_period()
+    await message.answer(
         "📅 <b>Супер!</b> Теперь укажите период: 🔜📆", reply_markup=keyboard
     )
     await state.set_state(SummaryState.choosing_period)
@@ -55,9 +77,15 @@ async def period_chosen_handler(callback_query: types.CallbackQuery, state: FSMC
         )
         return
     chats = user_data.get("selected_chats")
-    result = await process_chat_summary(
-        chats, callback_query.from_user.id, period_key, category, callback_query.bot, callback_query.message
-    )
+    is_user_p = user_data.get("is_personal_query")
+    if not is_user_p:
+        result = await process_chat_summary(
+            chats, callback_query.from_user.id, period_key, category, callback_query.bot, callback_query.message
+        )
+    else:
+        result = await process_chat_summary_user_prompt(
+            chats, callback_query.from_user.id, period_key, category, callback_query.bot, callback_query.message
+        )
     await state.finish()
 
 async def toggle_chat_handler(callback: types.CallbackQuery, state: FSMContext):
@@ -81,7 +109,6 @@ async def toggle_chat_handler(callback: types.CallbackQuery, state: FSMContext):
             await callback.message.edit_reply_markup(reply_markup=keyboard)
         except:
             await callback.answer("Обновлено!")
-    
     await callback.answer()
 
 async def proceed_to_category_handler(callback: types.CallbackQuery, state: FSMContext):
@@ -140,6 +167,11 @@ def register_main_handlers(dp: Dispatcher):
         state=SummaryState.choosing_category,
     )
     dp.register_callback_query_handler(
+        category_enter_handler,
+        lambda c: c.data.startswith("MYCATEGORY"),
+        state=SummaryState.choosing_category,
+    )
+    dp.register_callback_query_handler(
         period_chosen_handler,
         lambda c: c.data.startswith("period_"),
         state=SummaryState.choosing_period,
@@ -147,7 +179,7 @@ def register_main_handlers(dp: Dispatcher):
 
     dp.register_callback_query_handler(help_adding_handler, text="HELP_ADDING_TO_CHAT")
     dp.register_callback_query_handler(help_adding_handler, text="HELP_ADDING_TO_CHAT", state="*")
-
+    dp.register_message_handler(get_query_ai, state=SummaryState.get_query)
     dp.register_callback_query_handler(
         toggle_chat_handler,
         lambda c: c.data.startswith("TOGGLE_CHAT_"),
