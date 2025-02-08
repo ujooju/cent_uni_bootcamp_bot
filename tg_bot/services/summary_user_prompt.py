@@ -80,8 +80,8 @@ async def yandex_gpt_summarize(text: str, user_prompt: str, message: types.Messa
         "Cообщения в формате [text] - [date] - [link]"
         f"{text}"
     )
-    print(system_prompt, "\n\n\n")
-    print(user_prompt, "\n\n\n")
+    # print(system_prompt, "\n\n\n")
+    # print(user_prompt, "\n\n\n")
     body = {
         "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-32k/rc",
         "completionOptions": {"stream": False, "temperature": 0.1, "maxTokens": 2000000},
@@ -132,6 +132,7 @@ async def summarize_messages(messages: list, user_prompt: str, max_percent: int,
         summary = await yandex_gpt_summarize(all_text, user_prompt, message, progress)
         summary_all.append(summary)
     summary = await yandex_gpt_summarize("\n".join(summary_all), user_prompt, message, progress)
+    print("\n SUMMARY:", summary)
     return summary
 
 async def process_chat_summary_user_prompt(chats: list[int], user_prompt: str, bot: Bot, message: types.Message):
