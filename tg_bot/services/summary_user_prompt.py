@@ -153,8 +153,8 @@ async def process_chat_summary_user_prompt(chats: list[int], user_prompt: str, b
             summary = await summarize_messages(messages, user_prompt, max_percent, percent_now, message)
             if summary.strip():
                 summaries.append(summary)
-        progress = round((index / total_chats) * 100)
-        await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
+        # progress = round((index / total_chats) * 100)
+        # await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
     
     if summaries:
         final_summary = "\n------------------------------\n".join(summaries)
