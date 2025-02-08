@@ -57,7 +57,7 @@ async def get_query_ai(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
 
     chats = user_data.get("selected_chats")
-
+    print(chats)
     result = await process_chat_summary_user_prompt(
         chats, category, message.bot, message
     )
