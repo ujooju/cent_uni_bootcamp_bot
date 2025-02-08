@@ -10,7 +10,8 @@ def create_chat(chat_id):
     Session = sessionmaker(bind=engine, expire_on_commit=False)
     with Session() as session:
         if not session.query(exists().where(Chat.id == chat_id)).scalar():
-            session.add(Chat(id=chat_id))
+            session.add(Chat(chat_id=chat_id))
+            session.commit()
             return True
         return False
 

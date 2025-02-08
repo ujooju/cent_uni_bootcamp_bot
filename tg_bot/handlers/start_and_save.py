@@ -5,10 +5,11 @@ from tg_bot.models import save_message_to_db
 from tg_bot.models import create_chat
 import asyncio
 from tg_bot.services import get_user_chats
-from tg_bot.keyboards import choose_chats, get_help_markup
+from tg_bot.keyboards import choose_chats, get_help_markup, choose_category, generate_chats_keyboard
 from datetime import datetime, timedelta
 from aiogram.utils.exceptions import MessageToDeleteNotFound, TelegramAPIError
 from typing import Optional
+from aiogram.dispatcher import FSMContext
 from tg_bot.states import SummaryState
 import logging
 
@@ -120,7 +121,7 @@ async def handle_error(message: types.Message) -> None:
         logger.error(f"Не удалось отправить сообщение об ошибке: {str(e)}")
 
 
-async def start_handler(message: types.Message, user_id: int = None):
+async def start_handler(message: types.Message, state: FSMContext, user_id: int = None):
     welcome_text = (
         "👋 *Привет, {user_name}!*\n\n"
         "Я твой цифровой помощник для работы с чатами! Вот что я умею:\n\n"
@@ -128,7 +129,7 @@ async def start_handler(message: types.Message, user_id: int = None):
         "⏰ *Напоминать о дедлайнах* и важных событиях\n"
         "📅 *Планировать активности* на ближайший месяц\n"
         "🤝 *Рекомендовать волонтерские мероприятия*\n\n"
-        "Чтобы начать работу, выбери чат из списка ниже:"
+        "Выбери чаты для работы:"
     ).format(user_name=message.from_user.full_name)
 
     no_chats_text = (
@@ -142,24 +143,64 @@ async def start_handler(message: types.Message, user_id: int = None):
 
     if message.chat.id < 0:
         return
-    if not user_id:
-        chats = await get_user_chats(target_user_id=message.from_user.id, bot=message.bot)
-    else:
-         chats = await get_user_chats(target_user_id=user_id, bot=message.bot)
-    if chats:
-
-        keyboard = choose_chats(chats)
-        await message.answer(welcome_text, parse_mode="Markdown", reply_markup=keyboard)
-        await message.delete()
-    else:
-        keyboard = get_help_markup()
-        await message.answer(no_chats_text, parse_mode="Markdown", reply_markup=keyboard)
-        await message.delete()
     
-    await SummaryState.choosing_chat.set()
+    target_user = user_id or message.from_user.id
+    chats = await get_user_chats(target_user_id=target_user, bot=message.bot)
+    print(chats)
+    async with state.proxy() as data:
+        data['selected_chats'] = data.get('selected_chats', [])
+        
+        if len(chats) == 1:
+            data['selected_chats'] = chats
+            await show_category_selection(message, chats, state)
+            return
 
-async def start_query_handler(callback: types.CallbackQuery):
-    return await start_handler(callback.message, callback.from_user.id)
+        if chats:
+            keyboard = await generate_chats_keyboard(chats, data['selected_chats'])
+            try:
+                await message.edit_text(welcome_text, parse_mode="Markdown", reply_markup=keyboard)
+            except:
+                await message.answer(welcome_text, parse_mode="Markdown", reply_markup=keyboard)
+        else:
+            keyboard = get_help_markup()
+            try:
+                await message.edit_text(no_chats_text, parse_mode="Markdown", reply_markup=keyboard)
+            except:
+                await message.answer(no_chats_text, parse_mode="Markdown", reply_markup=keyboard)
+    
+    await SummaryState.choosing_chats.set()
+    
+async def show_category_selection(message: types.Message, chats, state: FSMContext):
+    keyboard = choose_category()
+    welcome_text = (
+        "👋 *Привет, {user_name}!*\n\n"
+        "Я твой цифровой помощник для работы с чатами! Вот что я умею:\n\n"
+        "📝 *Делать краткие выжимки* из обсуждений за любой период\n"
+        "⏰ *Напоминать о дедлайнах* и важных событиях\n"
+        "📅 *Планировать активности* на ближайший месяц\n"
+        "🤝 *Рекомендовать волонтерские мероприятия*\n\n"
+    ).format(user_name=message.from_user.full_name)
+  
+    selected_chats = chats
+    chat_count = len(selected_chats)
+    chat_text = "чат" if chat_count == 1 else "чата" if 2 <= chat_count <= 4 else "чатов"
+    async with state.proxy() as data:
+        data['selected_chats'] = selected_chats
+    
+    text = welcome_text + (
+        f"У Вас есть единственный чат: *{selected_chats[0]['title']}*\n"
+        "Теперь выберите категорию:"
+    )
+    
+    try:
+        await message.edit_text(text, reply_markup=keyboard)
+    except:
+        await message.answer(text, reply_markup=keyboard)
+
+    await SummaryState.choosing_category.set()
+
+async def start_query_handler(callback: types.CallbackQuery, state: FSMContext):
+    return await start_handler(callback.message, state, callback.from_user.id)
 
 def register_start_handlers(dp: Dispatcher):
     dp.register_message_handler(start_handler, commands=["start"])
