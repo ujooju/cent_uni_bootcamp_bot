@@ -146,7 +146,6 @@ async def start_handler(message: types.Message, state: FSMContext, user_id: int 
     
     target_user = user_id or message.from_user.id
     chats = await get_user_chats(target_user_id=target_user, bot=message.bot)
-    print(chats)
     async with state.proxy() as data:
         data['selected_chats'] = data.get('selected_chats', [])
         

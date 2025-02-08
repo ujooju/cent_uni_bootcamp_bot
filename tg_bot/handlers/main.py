@@ -41,8 +41,6 @@ async def category_chosen_handler(callback_query: types.CallbackQuery, state: FS
 
 # ---- Обработчик выбора периода ----
 async def period_chosen_handler(callback_query: types.CallbackQuery, state: FSMContext):
-    async with state.proxy() as data:
-        print(data)
     period_key = callback_query.data
     periods = {
         "period_tomorrow": timedelta(days=1),
@@ -56,32 +54,9 @@ async def period_chosen_handler(callback_query: types.CallbackQuery, state: FSMC
             "<b>⚠️ Ой! Что-то не так.</b> Пожалуйста, выберите корректный период. ❌"
         )
         return
-    days = period_key
-    type_text = ""
-    if days == "period_month":
-        type_text = "Месяц"
-    if days == "period_week":
-        type_text = "Неделя"
-    if days == "period_day":
-        type_text = "День"
-    type = category
-    type2_text = "Всё"
-    if type == "deadlines":
-        type2_text = "Дедлайны"
-    if type == "dosug":
-        type2_text = "Досуг"
-    if type == "networking":
-        type2_text = "Нетворкинг"
-    
-    chat_id = user_data.get("chat_id")
-
-    start_date = datetime.now(pytz.UTC) - periods[period_key]
-    await callback_query.message.delete()
-    await callback_query.message.answer(
-        f"🔍 Чат: {chat_id}\n📂 Категория: {type2_text}\n📅 Период: {type_text}\n\nСкоро всё будет готово!"
-    )
+    chats = user_data.get("selected_chats")
     result = await process_chat_summary(
-        chat_id, callback_query.from_user.id, period_key, type, callback_query.bot
+        chats, callback_query.from_user.id, period_key, category, callback_query.bot, callback_query.message
     )
     await state.finish()
 
@@ -169,7 +144,7 @@ def register_main_handlers(dp: Dispatcher):
         lambda c: c.data.startswith("period_"),
         state=SummaryState.choosing_period,
     )
-    
+
     dp.register_callback_query_handler(help_adding_handler, text="HELP_ADDING_TO_CHAT")
     dp.register_callback_query_handler(help_adding_handler, text="HELP_ADDING_TO_CHAT", state="*")
 
