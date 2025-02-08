@@ -118,7 +118,7 @@ async def summarize_messages(messages: list, user_prompt: str, max_percent: int,
             unique_messages.append(msg)
             seen_texts.add(msg["text"])
     summary_all = []
-    for i in range(0, len(unique_messages), 15):
+    for i in range(0, len(unique_messages), 7):
         all_text = "\n".join([f'[{msg["text"]}] - [{msg["date"]}] - [{msg["link"]}]' for msg in unique_messages])
         progress = (max_percent + percent_now*2)//3
         try:
