@@ -123,12 +123,15 @@ async def summarize_messages(messages: list, user_prompt: str, max_percent: int,
         if msg["text"] not in seen_texts:
             unique_messages.append(msg)
             seen_texts.add(msg["text"])
-    all_text = "\n".join([f'[{msg["text"]}] - [{msg["date"]}] - [{msg["link"]}]' for msg in unique_messages])
-    progress = (max_percent + percent_now*2)//3
-    await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
-    progress = (max_percent*2 + percent_now)//3
-    summary = await yandex_gpt_summarize(all_text, user_prompt, message, progress)
-    
+    summary_all = []
+    for i in range(0, len(unique_messages), 15):
+        all_text = "\n".join([f'[{msg["text"]}] - [{msg["date"]}] - [{msg["link"]}]' for msg in unique_messages])
+        progress = (max_percent + percent_now*2)//3
+        await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
+        progress = (max_percent*2 + percent_now)//3
+        summary = await yandex_gpt_summarize(all_text, user_prompt, message, progress)
+        summary_all.append(summary)
+    summary = await yandex_gpt_summarize("\n".join(all_text), user_prompt, message, progress)
     return summary
 
 async def process_chat_summary_user_prompt(chats: list[int], user_prompt: str, bot: Bot, message: types.Message):
