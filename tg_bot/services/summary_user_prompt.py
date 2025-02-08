@@ -96,8 +96,8 @@ async def yandex_gpt_summarize(text: str, user_prompt: str, message: types.Messa
     response = requests.post(url, headers=headers, json=body)
     print(response)
     operation_id = response.json().get("id")
-    if message:
-        await message.edit_text(f"⏳ Обработка сообщений: {percent}%")
+    # if message:
+    #     await message.edit_text(f"⏳ Обработка сообщений: {percent}%")
     
     while True:
         response = requests.get(f"https://llm.api.cloud.yandex.net:443/operations/{operation_id}", headers=headers)
