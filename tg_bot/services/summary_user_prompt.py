@@ -1,4 +1,5 @@
 import asyncio
+from math import e
 import re
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -96,9 +97,12 @@ async def yandex_gpt_summarize(text: str, user_prompt: str, message: types.Messa
     response = requests.post(url, headers=headers, json=body)
     print(response)
     operation_id = response.json().get("id")
-    # if message:
-    #     await message.edit_text(f"⏳ Обработка сообщений: {percent}%")
-    
+    try:
+        if message:
+            await message.edit_text(f"⏳ Обработка сообщений: {percent}%")
+    except:
+        pass
+
     while True:
         response = requests.get(f"https://llm.api.cloud.yandex.net:443/operations/{operation_id}", headers=headers)
         if response.json().get("done"):
@@ -127,7 +131,10 @@ async def summarize_messages(messages: list, user_prompt: str, max_percent: int,
     for i in range(0, len(unique_messages), 15):
         all_text = "\n".join([f'[{msg["text"]}] - [{msg["date"]}] - [{msg["link"]}]' for msg in unique_messages])
         progress = (max_percent + percent_now*2)//3
-        await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
+        try:
+            await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
+        except:
+            pass
         progress = (max_percent*2 + percent_now)//3
         summary = await yandex_gpt_summarize(all_text, user_prompt, message, progress)
         summary_all.append(summary)
@@ -157,8 +164,13 @@ async def process_chat_summary_user_prompt(chats: list[int], user_prompt: str, b
         # await message.edit_text(f"⏳ Обработка сообщений: {progress}%")
     
     if summaries:
-        final_summary = "\n------------------------------\n".join(summaries)
-        await message.edit_text(f"📊 Итоговая выжимка:\n\n{final_summary}")
+        try:
+            final_summary = "\n------------------------------\n".join(summaries)
+            await message.edit_text(f"📊 Итоговая выжимка:\n\n{final_summary}")
+        except:
+            await message.answer(f"📊 Итоговая выжимка:\n\n{final_summary}")
     else:
-        await message.edit_text("📊 Нет релевантных данных за выбранный период.")
-
+        try:
+            await message.edit_text("📊 Нет релевантных данных за выбранный период.")
+        except:
+            await message.answer("📊 Нет релевантных данных за выбранный период.")
