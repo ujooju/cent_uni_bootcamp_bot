@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def get_user_chats(target_user_id: int, bot: Bot) -> list[dict]:
+async def get_user_chats(target_user_id: int, bot: Bot):
     try:
         chat_ids = await get_chat_ids_from_db()
         
@@ -28,7 +28,7 @@ async def get_user_chats(target_user_id: int, bot: Bot) -> list[dict]:
         logger.critical(f"Критическая ошибка: {e}", exc_info=True)
         return []
 
-async def is_bot_admin(chat_id: int, bot: Bot) -> bool:
+async def is_bot_admin(chat_id: int, bot: Bot):
     try:
         bot_member = await bot.get_chat_member(chat_id, (await bot.get_me()).id)
         return bot_member.status in ["administrator", "creator"]
@@ -36,7 +36,7 @@ async def is_bot_admin(chat_id: int, bot: Bot) -> bool:
         logger.warning(f"Ошибка проверки прав бота в чате {chat_id}: {str(e)}.")
         return False
 
-async def is_user_in_chat(chat_id: int, user_id: int, bot: Bot) -> bool:
+async def is_user_in_chat(chat_id: int, user_id: int, bot: Bot):
     try:
         member = await bot.get_chat_member(chat_id, user_id)
         return member.status not in ["left", "kicked"]
@@ -44,7 +44,7 @@ async def is_user_in_chat(chat_id: int, user_id: int, bot: Bot) -> bool:
         logger.debug(f"Пользователь {user_id} отсутствует в чате {chat_id}: {str(e)}")
         return False
 
-async def get_chat_info(chat_id: int, bot: Bot) -> dict:
+async def get_chat_info(chat_id: int, bot: Bot):
     try:
         chat = await bot.get_chat(chat_id)
         return {
