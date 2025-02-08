@@ -67,6 +67,7 @@ async def get_chat_history(chat_id: int) -> list:
     try:
         session = sessionmaker(bind=engine)()
         result = session.query(Message).filter(Message.chat_id == chat_id).all()
+        session.close()
         return [
             {"text": msg.message_text, "date": msg.timestamp, "link": msg.link}
             for msg in result
@@ -75,8 +76,10 @@ async def get_chat_history(chat_id: int) -> list:
         print(f"Ошибка получения истории: {e}")
         return []
     finally:
-        session.close()
-
+        try:
+            session.close()
+        except:
+            pass
 async def yandex_gpt_summarize(text: str, type_text: str, type2_text: str, message: types.Message=None, percent=None) -> str:
     today_date = datetime.now(pytz.timezone("Europe/Moscow")).strftime("%d.%m.%Y")
     system_prompt = system_prompt = f"""
