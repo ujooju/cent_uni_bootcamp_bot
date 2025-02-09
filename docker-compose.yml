@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  bot:
+    image: python:3.10
+    container_name: tg_bot
+    restart: always
+    working_dir: /app
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    command: bash -c "pip install -r requirements.txt && python bot.py"
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    networks:
+      - bot-network
+
+  db:
+    image: postgres:13
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bot-network
+
+volumes:
+  postgres_data:
+
+networks:
+  bot-network:
+    driver: bridge

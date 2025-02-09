@@ -4,3 +4,5 @@ environs == 8.0.0
 sqlalchemy>=2.0.0
 pytz==2025.1
 yandex-cloud-ml-sdk
+psycopg2-binary>=2.8.5; sys_platform == "linux" or sys_platform == "darwin"
+psycopg2>=2.8.5; sys_platform == "win32"

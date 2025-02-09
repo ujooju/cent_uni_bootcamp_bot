@@ -1,7 +1,9 @@
 import asyncio
 import logging
+from aiohttp import web
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import Update
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from dotenv import load_dotenv
 
@@ -28,13 +30,50 @@ async def main():
 
     register_all_handlers(dp)
 
+    webhook_url = f"https://{config.tg_bot.public_url}/webhook"
+    await bot.set_webhook(
+        url=webhook_url,
+        secret_token=config.webhook_secret,
+        drop_pending_updates=True
+    )
+    logger.info(f"Webhook установлен на {webhook_url}")
+
+    app = web.Application()
+    app['bot'] = bot
+    app['dp'] = dp
+    app['config'] = config
+
+    async def webhook_handler(request):
+        secret_token = request.headers.get('X-Telegram-Bot-Api-Secret-Token')
+        if secret_token != app['config'].webhook_secret:
+            return web.Response(status=403)
+        
+        data = await request.json()
+        update = Update(**data)
+        await app['dp'].process_update(update)
+        return web.Response()
+
+    app.router.add_post('/webhook', webhook_handler)
+
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host=config.tg_bot.local_url, port=config.tg_bot.local_port)
+    await site.start()
+
+    logger.info(f"Сервер запущен на {config.tg_bot.local_url}:{config.tg_bot.local_port}")
+
     try:
-        logger.info("Starting bot...")
-        await dp.start_polling()
+        await asyncio.Event().wait()
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Остановка сервера...")
     finally:
+        await bot.delete_webhook()
         await dp.storage.close()
         await dp.storage.wait_closed()
         await bot.session.close()
+        await runner.cleanup()
+        logger.info("Бот остановлен")
 
 
 if __name__ == "__main__":

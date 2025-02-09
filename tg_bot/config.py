@@ -10,6 +10,9 @@ from environs import Env
 @dataclass
 class TgBot:
     token: str
+    public_url: str
+    local_url: str
+    local_port: int
 
 
 @dataclass
@@ -38,9 +41,15 @@ def load_config(path: str = ".env") -> Config:
     env.read_env(path)
 
     return Config(
-        tg_bot=TgBot(token=env.str("BOT_TOKEN")),
+        tg_bot=TgBot(
+            token=env.str("BOT_TOKEN"),
+            public_url=env.str("PUBLIC_URL"),
+            local_url=env.str("LOCAL_URL"),
+            local_port=env.int("LOCAL_PORT")
+        ),
         yandex_api=YandexApiConfig(
-            folder_id=env.str("YANDEX_FOLDER_ID"), api_key=env.str("YANDEX_API_KEY")
+            folder_id=env.str("YANDEX_FOLDER_ID"), 
+            api_key=env.str("YANDEX_API_KEY")
         ),
         db_config=DbConfig(
             host=env.str("DB_HOST"),
