@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.8"
 
 services:
   bot:
@@ -18,18 +18,20 @@ services:
     networks:
       - bot-network
 
-  db:
-    image: postgres:13
-    container_name: postgres_db
-    restart: always
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - bot-network
+db:
+  image: postgres:13
+  container_name: postgres_db
+  restart: always
+  environment:
+    POSTGRES_DB: ${DB_NAME}
+    POSTGRES_USER: ${DB_USER}
+    POSTGRES_PASSWORD: ${DB_PASSWORD}
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+  networks:
+    - bot-network
+  ports:
+    - "${DB_PORT}:${DB_PORT}"  # Проброс порта 5432 для внешних подключений
 
 volumes:
   postgres_data:
