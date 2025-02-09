@@ -31,7 +31,7 @@ services:
     networks:
       - bot-network
     ports:
-      - "${DB_PORT}:${DB_PORT}"  # Проброс порта 5432 для внешних подключений
+      - "5432:5432"  # Проброс порта 5432 для внешних подключений
 
 volumes:
   postgres_data:
