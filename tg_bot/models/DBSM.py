@@ -9,7 +9,7 @@ from tg_bot.config import load_config
 
 config = load_config(".env")
 engine = create_engine(
-    f"postgresql://{config.db_config.user}:%s@{config.db_config.host}/{config.db_config.database}"
+    f"postgresql://{config.db_config.user}:5433%s@{config.db_config.host}/{config.db_config.database}"
     % quote_plus(f"{config.db_config.password}", encoding="utf8")
 )
 
