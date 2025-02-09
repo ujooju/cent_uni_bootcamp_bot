@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.3"
 
 services:
   bot:
@@ -31,7 +31,7 @@ db:
   networks:
     - bot-network
   ports:
-    - "${DB_PORT}:${DB_PORT}"  # Проброс порта 5432 для внешних подключений
+    - "${DB_PORT}:${DB_PORT}" 
 
 volumes:
   postgres_data:
