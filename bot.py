@@ -33,7 +33,7 @@ async def main():
     webhook_url = f"https://{config.tg_bot.public_url}/webhook"
     await bot.set_webhook(
         url=webhook_url,
-        secret_token=config.webhook_secret,
+        #secret_token=config.webhook_secret,
         drop_pending_updates=True
     )
     logger.info(f"Webhook установлен на {webhook_url}")
@@ -44,9 +44,9 @@ async def main():
     app['config'] = config
 
     async def webhook_handler(request):
-        secret_token = request.headers.get('X-Telegram-Bot-Api-Secret-Token')
-        if secret_token != app['config'].webhook_secret:
-            return web.Response(status=403)
+        #secret_token = request.headers.get('X-Telegram-Bot-Api-Secret-Token')
+        #if secret_token != app['config'].webhook_secret:
+        #    return web.Response(status=403)
         
         data = await request.json()
         update = Update(**data)
