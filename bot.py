@@ -15,7 +15,7 @@ logger = setup_logger()
 
 
 def register_all_handlers(dp: Dispatcher):
-    logger.debug("Registering handlers...")
+    logger.info("Registering handlers...")
     register_main_handlers(dp)
     register_start_handlers(dp)
 
@@ -30,7 +30,7 @@ async def main():
 
     register_all_handlers(dp)
 
-    webhook_url = f"https://{config.tg_bot.public_url}"
+    webhook_url = f"https://{config.tg_bot.public_url}/webhook"
     await bot.set_webhook(
         url=webhook_url,
         #secret_token=config.webhook_secret,
