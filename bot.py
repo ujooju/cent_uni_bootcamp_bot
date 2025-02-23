@@ -47,7 +47,7 @@ async def main():
         #secret_token = request.headers.get('X-Telegram-Bot-Api-Secret-Token')
         #if secret_token != app['config'].webhook_secret:
         #    return web.Response(status=403)
-        
+        print("incoming request")
         data = await request.json()
         update = Update(**data)
         await app['dp'].process_update(update)
