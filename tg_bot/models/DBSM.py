@@ -9,7 +9,7 @@ from tg_bot.config import load_config
 
 config = load_config(".env")
 engine = create_engine(
-    f"postgres://{config.db_config.user}:{config.db_config.password}@{config.db_config.host}/{config.db_config.database}"
+    f"postgresql+psycopg2://{config.db_config.user}:{config.db_config.password}@{config.db_config.host}/{config.db_config.database}"
 )
 
 Base = declarative_base()
