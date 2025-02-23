@@ -53,7 +53,7 @@ async def main():
         await app['dp'].process_update(update)
         return web.Response()
 
-    app.router.add_post('/webhook', webhook_handler)
+    app.router.add_post('/', webhook_handler)
 
 
     runner = web.AppRunner(app)
