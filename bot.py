@@ -34,7 +34,7 @@ async def main():
     await bot.set_webhook(
         url=webhook_url,
         #secret_token=config.webhook_secret,
-        drop_pending_updates=True
+        #drop_pending_updates=True
     )
     logger.info(f"Webhook установлен на {webhook_url}")
 
